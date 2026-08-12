@@ -6,7 +6,10 @@
     <style>
         body { font-family: sans-serif; background-color: #f4f5f7; padding: 20px; color: #333; }
         .container { max-width: 950px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1 { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        h1 { font-size: 1.5em; margin: 0; }
+        .save-load-btns { display: flex; gap: 10px; }
+        
         .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px; background: #fafafa; }
         
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: #fff; }
@@ -19,6 +22,9 @@
         .btn-add { background-color: #4caf50; color: white; margin-top: 10px;}
         .btn-delete { background-color: #f44336; color: white; padding: 6px 10px; }
         .btn-run { background-color: #1976d2; color: white; width: 100%; font-size: 1.2em; padding: 15px; margin-top: 10px; }
+        .btn-save { background-color: #607d8b; color: white; }
+        .btn-load { background-color: #8d6e63; color: white; }
+        
         .result-box { margin-top: 20px; padding: 20px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 5px; text-align: center; }
         .result-value { font-size: 1.5em; font-weight: bold; color: #d32f2f; }
         .total-power-row { font-size: 1.2em; font-weight: bold; background: #e3f2fd; padding: 10px; border-radius: 5px; display: inline-block;}
@@ -35,7 +41,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>戦国IXA 火力シミュレーター (Ver 0.5 - 卓越バフ対応版)</h1>
+        <div class="header-area">
+            <h1>戦国IXA 火力シミュレーター (Ver 0.6)</h1>
+            <div class="save-load-btns">
+                <button class="btn btn-save" onclick="saveData()">💾 保存</button>
+                <button class="btn btn-load" onclick="loadData()">📂 読込</button>
+            </div>
+        </div>
         
         <!-- 1. 素攻計算セクション -->
         <div class="section">
@@ -70,14 +82,10 @@
             </div>
         </div>
 
-        <!-- 2. 部隊バフ設定（新規） -->
+        <!-- 2. 部隊バフ設定 -->
         <div class="section box-buff">
             <h3>2. 部隊全体のバフ設定</h3>
             <label style="font-weight: bold;">✨ 卓越確率アップの合計値: + <input type="number" id="globalTakBuff" value="15" style="width: 80px;"> %</label>
-            <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">
-                ※建御雷神ノ閃光(+15%)や月詠ノ覇威(+20%)、明智光秀・黒田官兵衛等のスキルによる<br>
-                「部隊の卓越確率アップ」の合計数値を入力してください。各スキルの卓越確率にこの値が加算されます。
-            </p>
         </div>
 
         <!-- 3. 模倣（マネ）セクション -->
@@ -85,7 +93,7 @@
             <h3>3. 模倣（マネ）設定</h3>
             
             <div class="box-cmd">
-                <h4>👑 部隊長スキル（模倣元）<span class="header-sub">※模倣されるスキル</span></h4>
+                <h4>👑 部隊長スキル（模倣元）</h4>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                     <input type="text" id="cmdName" value="遠呂智ノ閃光" style="width: 130px;">
                     <label>発動: <input type="number" id="cmdRate" value="100" style="width: 60px;"> %</label>
@@ -99,7 +107,7 @@
             </div>
 
             <div class="box-mane">
-                <h4>👥 模倣スキルの数 <span class="header-sub">※部隊長スキルをコピーする回数</span></h4>
+                <h4>👥 模倣スキルの数</h4>
                 <label>マネ数: <input type="number" id="maneCount" value="12" style="width: 60px;"> 個</label>
                 <label>平均発動率: <input type="number" id="maneRate" value="100" style="width: 60px;"> %</label>
             </div>
@@ -109,7 +117,6 @@
         <div class="section">
             <h3>4. その他の通常スキル（初期スキル・バフ等）</h3>
             <div id="skillsArea">
-                <!-- 初期スキル枠 -->
                 <div class="skill-row">
                     <input type="text" value="建御雷神ノ閃光" class="s-name" style="width: 130px;">
                     <label>発動: <input type="number" value="100" class="s-rate" style="width: 50px;"> %</label>
@@ -135,6 +142,108 @@
     </div>
 
     <script>
+        // --- データ保存・読み込み処理 ---
+        function saveData() {
+            const data = {
+                bushou: [],
+                basePower: document.getElementById('basePower').value,
+                globalTakBuff: document.getElementById('globalTakBuff').value,
+                cmd: {
+                    name: document.getElementById('cmdName').value,
+                    rate: document.getElementById('cmdRate').value,
+                    effect: document.getElementById('cmdEffect').value,
+                    takRate: document.getElementById('cmdTakRate').value,
+                    takEffect: document.getElementById('cmdTakEffect').value
+                },
+                mane: {
+                    count: document.getElementById('maneCount').value,
+                    rate: document.getElementById('maneRate').value
+                },
+                skills: []
+            };
+
+            for(let i=1; i<=4; i++) {
+                data.bushou.push({
+                    atk: document.getElementById(`atk${i}`).value,
+                    troops: document.getElementById(`troops${i}`).value,
+                    soldierAtk: document.getElementById(`soldierAtk${i}`).value,
+                    command: document.getElementById(`command${i}`).value
+                });
+            }
+
+            document.querySelectorAll('.skill-row').forEach(row => {
+                data.skills.push({
+                    name: row.querySelector('.s-name').value,
+                    rate: row.querySelector('.s-rate').value,
+                    effect: row.querySelector('.s-effect').value,
+                    takRate: row.querySelector('.s-tak-rate').value,
+                    takEffect: row.querySelector('.s-tak-effect').value
+                });
+            });
+
+            localStorage.setItem('ixaSimulatorData', JSON.stringify(data));
+            alert('データをブラウザに保存しました！');
+        }
+
+        function loadData() {
+            const savedData = localStorage.getItem('ixaSimulatorData');
+            if(!savedData) {
+                alert('保存されたデータがありません。');
+                return;
+            }
+
+            const data = JSON.parse(savedData);
+            
+            if(data.bushou) {
+                for(let i=1; i<=4; i++) {
+                    if(data.bushou[i-1]) {
+                        document.getElementById(`atk${i}`).value = data.bushou[i-1].atk;
+                        document.getElementById(`troops${i}`).value = data.bushou[i-1].troops;
+                        document.getElementById(`soldierAtk${i}`).value = data.bushou[i-1].soldierAtk;
+                        document.getElementById(`command${i}`).value = data.bushou[i-1].command;
+                    }
+                }
+            }
+
+            if(data.basePower) document.getElementById('basePower').value = data.basePower;
+            if(data.globalTakBuff) document.getElementById('globalTakBuff').value = data.globalTakBuff;
+            
+            if(data.cmd) {
+                document.getElementById('cmdName').value = data.cmd.name;
+                document.getElementById('cmdRate').value = data.cmd.rate;
+                document.getElementById('cmdEffect').value = data.cmd.effect;
+                document.getElementById('cmdTakRate').value = data.cmd.takRate;
+                document.getElementById('cmdTakEffect').value = data.cmd.takEffect;
+            }
+
+            if(data.mane) {
+                document.getElementById('maneCount').value = data.mane.count;
+                document.getElementById('maneRate').value = data.mane.rate;
+            }
+
+            if(data.skills) {
+                const skillsArea = document.getElementById('skillsArea');
+                skillsArea.innerHTML = ''; // 一旦クリア
+                data.skills.forEach(skill => {
+                    const div = document.createElement('div');
+                    div.className = 'skill-row';
+                    div.innerHTML = `
+                        <input type="text" value="${skill.name}" class="s-name" style="width: 130px;">
+                        <label>発動: <input type="number" value="${skill.rate}" class="s-rate" style="width: 50px;"> %</label>
+                        <label>上昇: <input type="number" value="${skill.effect}" class="s-effect" style="width: 60px;"> %</label>
+                        <div class="takuetsu-group">
+                            <label>卓越: <input type="number" value="${skill.takRate}" class="s-tak-rate" style="width: 50px;"> %</label>
+                            <label>卓越上昇: <input type="number" value="${skill.takEffect}" class="s-tak-effect" style="width: 60px;"> %</label>
+                        </div>
+                        <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
+                    `;
+                    skillsArea.appendChild(div);
+                });
+            }
+            alert('データを読み込みました！');
+        }
+
+        // --- 以下は既存の計算・シミュレーション処理 ---
         function calculateBasePower() {
             let totalBasePower = 0;
             for (let i = 1; i <= 4; i++) {
@@ -170,20 +279,14 @@
                 return;
             }
 
-            // 部隊バフの取得
             const globalTakBuff = (parseFloat(document.getElementById('globalTakBuff').value) || 0) / 100;
-
-            // 部隊長スキルの取得
             const cmdRate = (parseFloat(document.getElementById('cmdRate').value) || 0) / 100;
             const cmdEffect = (parseFloat(document.getElementById('cmdEffect').value) || 0) / 100;
             const cmdTakRate = (parseFloat(document.getElementById('cmdTakRate').value) || 0) / 100;
             const cmdTakEffect = (parseFloat(document.getElementById('cmdTakEffect').value) || 0) / 100;
-
-            // マネ設定の取得
             const maneCount = parseInt(document.getElementById('maneCount').value) || 0;
             const maneRate = (parseFloat(document.getElementById('maneRate').value) || 0) / 100;
 
-            // その他のスキル取得
             const skillRows = document.querySelectorAll('.skill-row');
             const normalSkills = [];
             skillRows.forEach(row => {
@@ -199,34 +302,27 @@
             let minDmg = Infinity;
             let sumDmg = 0;
 
-            // 卓越の処理関数（部隊バフを加算）
             function getSkillEffect(isTriggered, effect, takRate, takEffect, buffRate) {
-                if (!isTriggered) return 0; // スキル不発
-                
-                // 卓越確率か卓越上昇値が入力されている場合、卓越スキルとみなして判定
+                if (!isTriggered) return 0; 
                 if (takRate > 0 || takEffect > 0) {
                     const finalTakRate = takRate + buffRate;
                     if (Math.random() <= finalTakRate) {
-                        return takEffect; // 卓越成功
+                        return takEffect; 
                     }
                 }
-                return effect; // 卓越失敗、または卓越スキルではない
+                return effect; 
             }
 
             for (let i = 0; i < iterations; i++) {
                 let totalMultiplier = 1.0; 
-
-                // 1. 部隊長スキル自体の発動と卓越
                 let cmdTriggered = Math.random() <= cmdRate;
                 totalMultiplier += getSkillEffect(cmdTriggered, cmdEffect, cmdTakRate, cmdTakEffect, globalTakBuff);
 
-                // 2. 模倣スキルの発動と卓越（マネ数分ループ）
                 for (let m = 0; m < maneCount; m++) {
                     let maneTriggered = Math.random() <= maneRate;
                     totalMultiplier += getSkillEffect(maneTriggered, cmdEffect, cmdTakRate, cmdTakEffect, globalTakBuff);
                 }
 
-                // 3. その他の通常スキルの発動と卓越
                 for (let skill of normalSkills) {
                     let skillTriggered = Math.random() <= skill.rate;
                     totalMultiplier += getSkillEffect(skillTriggered, skill.effect, skill.takRate, skill.takEffect, globalTakBuff);
