@@ -25,6 +25,8 @@
         
         .box-cmd { background: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #c8e6c9; }
         .box-mane { background: #fff3e0; padding: 15px; border-radius: 5px; border: 1px solid #ffe0b2; }
+        .box-buff { background: #fce4ec; padding: 15px; border-radius: 5px; border: 1px solid #f8bbd0; margin-bottom: 15px;}
+        
         .skill-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px;}
         .takuetsu-group { background: #fce4ec; padding: 5px 10px; border-radius: 4px; border: 1px dashed #f48fb1; display: inline-flex; align-items: center; gap: 8px;}
         h4 { margin-top: 0; margin-bottom: 10px; }
@@ -33,7 +35,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>戦国IXA 火力シミュレーター (Ver 0.4 - 卓越対応版)</h1>
+        <h1>戦国IXA 火力シミュレーター (Ver 0.5 - 卓越バフ対応版)</h1>
         
         <!-- 1. 素攻計算セクション -->
         <div class="section">
@@ -68,20 +70,30 @@
             </div>
         </div>
 
-        <!-- 2. 模倣（マネ）セクション -->
+        <!-- 2. 部隊バフ設定（新規） -->
+        <div class="section box-buff">
+            <h3>2. 部隊全体のバフ設定</h3>
+            <label style="font-weight: bold;">✨ 卓越確率アップの合計値: + <input type="number" id="globalTakBuff" value="15" style="width: 80px;"> %</label>
+            <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">
+                ※建御雷神ノ閃光(+15%)や月詠ノ覇威(+20%)、明智光秀・黒田官兵衛等のスキルによる<br>
+                「部隊の卓越確率アップ」の合計数値を入力してください。各スキルの卓越確率にこの値が加算されます。
+            </p>
+        </div>
+
+        <!-- 3. 模倣（マネ）セクション -->
         <div class="section">
-            <h3>2. 模倣（マネ）設定</h3>
+            <h3>3. 模倣（マネ）設定</h3>
             
             <div class="box-cmd">
                 <h4>👑 部隊長スキル（模倣元）<span class="header-sub">※模倣されるスキル</span></h4>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <input type="text" id="cmdName" value="建御雷神ノ閃光" style="width: 130px;">
+                    <input type="text" id="cmdName" value="遠呂智ノ閃光" style="width: 130px;">
                     <label>発動: <input type="number" id="cmdRate" value="100" style="width: 60px;"> %</label>
-                    <label>上昇: <input type="number" id="cmdEffect" value="320" style="width: 70px;"> %</label>
+                    <label>上昇: <input type="number" id="cmdEffect" value="120" style="width: 70px;"> %</label>
                     
                     <div class="takuetsu-group">
-                        <label>卓越確率: <input type="number" id="cmdTakRate" value="50" style="width: 50px;"> %</label>
-                        <label>卓越時上昇: <input type="number" id="cmdTakEffect" value="640" style="width: 70px;"> %</label>
+                        <label>卓越確率: <input type="number" id="cmdTakRate" value="30" style="width: 50px;"> %</label>
+                        <label>卓越時上昇: <input type="number" id="cmdTakEffect" value="360" style="width: 70px;"> %</label>
                     </div>
                 </div>
             </div>
@@ -90,19 +102,18 @@
                 <h4>👥 模倣スキルの数 <span class="header-sub">※部隊長スキルをコピーする回数</span></h4>
                 <label>マネ数: <input type="number" id="maneCount" value="12" style="width: 60px;"> 個</label>
                 <label>平均発動率: <input type="number" id="maneRate" value="100" style="width: 60px;"> %</label>
-                <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">※卓越確率は模倣先（部隊長スキル）の数値を参照し、マネごとに独立して卓越抽選が行われます。</p>
             </div>
         </div>
 
-        <!-- 3. その他の通常スキルセクション -->
+        <!-- 4. その他の通常スキルセクション -->
         <div class="section">
-            <h3>3. その他の通常スキル（初期スキル・バフ等）</h3>
+            <h3>4. その他の通常スキル（初期スキル・バフ等）</h3>
             <div id="skillsArea">
                 <!-- 初期スキル枠 -->
                 <div class="skill-row">
-                    <input type="text" value="通常スキル例" class="s-name" style="width: 130px;">
+                    <input type="text" value="建御雷神ノ閃光" class="s-name" style="width: 130px;">
                     <label>発動: <input type="number" value="100" class="s-rate" style="width: 50px;"> %</label>
-                    <label>上昇: <input type="number" value="150" class="s-effect" style="width: 60px;"> %</label>
+                    <label>上昇: <input type="number" value="320" class="s-effect" style="width: 60px;"> %</label>
                     <div class="takuetsu-group">
                         <label>卓越: <input type="number" value="0" class="s-tak-rate" style="width: 50px;"> %</label>
                         <label>卓越上昇: <input type="number" value="0" class="s-tak-effect" style="width: 60px;"> %</label>
@@ -159,6 +170,9 @@
                 return;
             }
 
+            // 部隊バフの取得
+            const globalTakBuff = (parseFloat(document.getElementById('globalTakBuff').value) || 0) / 100;
+
             // 部隊長スキルの取得
             const cmdRate = (parseFloat(document.getElementById('cmdRate').value) || 0) / 100;
             const cmdEffect = (parseFloat(document.getElementById('cmdEffect').value) || 0) / 100;
@@ -185,14 +199,18 @@
             let minDmg = Infinity;
             let sumDmg = 0;
 
-            // 卓越の処理関数
-            function getSkillEffect(isTriggered, effect, takRate, takEffect) {
-                if (!isTriggered) return 0;
-                // 発動した場合、卓越確率の判定を行う
-                if (takRate > 0 && Math.random() <= takRate) {
-                    return takEffect; // 卓越成功時は卓越効果値を使用
+            // 卓越の処理関数（部隊バフを加算）
+            function getSkillEffect(isTriggered, effect, takRate, takEffect, buffRate) {
+                if (!isTriggered) return 0; // スキル不発
+                
+                // 卓越確率か卓越上昇値が入力されている場合、卓越スキルとみなして判定
+                if (takRate > 0 || takEffect > 0) {
+                    const finalTakRate = takRate + buffRate;
+                    if (Math.random() <= finalTakRate) {
+                        return takEffect; // 卓越成功
+                    }
                 }
-                return effect; // 卓越失敗（または卓越なし）は通常効果値
+                return effect; // 卓越失敗、または卓越スキルではない
             }
 
             for (let i = 0; i < iterations; i++) {
@@ -200,19 +218,18 @@
 
                 // 1. 部隊長スキル自体の発動と卓越
                 let cmdTriggered = Math.random() <= cmdRate;
-                totalMultiplier += getSkillEffect(cmdTriggered, cmdEffect, cmdTakRate, cmdTakEffect);
+                totalMultiplier += getSkillEffect(cmdTriggered, cmdEffect, cmdTakRate, cmdTakEffect, globalTakBuff);
 
                 // 2. 模倣スキルの発動と卓越（マネ数分ループ）
-                // ※マネごとに独立して卓越判定を行うのがIXAの仕様
                 for (let m = 0; m < maneCount; m++) {
                     let maneTriggered = Math.random() <= maneRate;
-                    totalMultiplier += getSkillEffect(maneTriggered, cmdEffect, cmdTakRate, cmdTakEffect);
+                    totalMultiplier += getSkillEffect(maneTriggered, cmdEffect, cmdTakRate, cmdTakEffect, globalTakBuff);
                 }
 
                 // 3. その他の通常スキルの発動と卓越
                 for (let skill of normalSkills) {
                     let skillTriggered = Math.random() <= skill.rate;
-                    totalMultiplier += getSkillEffect(skillTriggered, skill.effect, skill.takRate, skill.takEffect);
+                    totalMultiplier += getSkillEffect(skillTriggered, skill.effect, skill.takRate, skill.takEffect, globalTakBuff);
                 }
 
                 const finalDmg = basePower * totalMultiplier;
