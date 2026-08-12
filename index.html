@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>戦国IXA 火力シミュレーター</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f5f7; padding: 20px; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px; background: #fafafa; }
+        .skill-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+        input[type="number"], input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-add { background-color: #4caf50; color: white; }
+        .btn-delete { background-color: #f44336; color: white; padding: 8px 10px; }
+        .btn-run { background-color: #1976d2; color: white; width: 100%; font-size: 1.2em; padding: 15px; margin-top: 10px; }
+        .result-box { margin-top: 20px; padding: 20px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 5px; text-align: center; }
+        .result-value { font-size: 1.5em; font-weight: bold; color: #d32f2f; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>戦国IXA 火力シミュレーター (Ver 0.1)</h1>
+        
+        <div class="section">
+            <h3>1. 部隊の素攻</h3>
+            <label>部隊素攻: <input type="number" id="basePower" value="1000000" style="width: 150px;"> (例: 1000000)</label>
+        </div>
+
+        <div class="section">
+            <h3>2. スキルセット</h3>
+            <div id="skillsArea">
+                <!-- 初期スキル枠 -->
+                <div class="skill-row">
+                    <input type="text" value="スキル1" placeholder="スキル名" class="s-name" style="width: 120px;">
+                    <label>発動率: <input type="number" value="100" class="s-rate" style="width: 60px;"> %</label>
+                    <label>上昇率: <input type="number" value="160" class="s-effect" style="width: 80px;"> %</label>
+                    <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
+                </div>
+                <div class="skill-row">
+                    <input type="text" value="スキル2" placeholder="スキル名" class="s-name" style="width: 120px;">
+                    <label>発動率: <input type="number" value="70" class="s-rate" style="width: 60px;"> %</label>
+                    <label>上昇率: <input type="number" value="320" class="s-effect" style="width: 80px;"> %</label>
+                    <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
+                </div>
+            </div>
+            <button class="btn btn-add" onclick="addSkill()">+ スキルを追加</button>
+        </div>
+
+        <button class="btn btn-run" onclick="runSimulation()">⚔️ 10,000回 シミュレーション実行</button>
+
+        <div id="resultArea" class="result-box" style="display:none;">
+            <h3>シミュレーション結果 (10,000回戦闘)</h3>
+            <p>最大火力: <span class="result-value" id="resMax"></span></p>
+            <p>最小火力: <span class="result-value" id="resMin"></span></p>
+            <p>期待値 (平均): <span class="result-value" id="resAvg"></span></p>
+        </div>
+    </div>
+
+    <script>
+        function addSkill() {
+            const div = document.createElement('div');
+            div.className = 'skill-row';
+            div.innerHTML = `
+                <input type="text" value="新規スキル" class="s-name" style="width: 120px;">
+                <label>発動率: <input type="number" value="50" class="s-rate" style="width: 60px;"> %</label>
+                <label>上昇率: <input type="number" value="100" class="s-effect" style="width: 80px;"> %</label>
+                <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
+            `;
+            document.getElementById('skillsArea').appendChild(div);
+        }
+
+        function runSimulation() {
+            const basePower = parseFloat(document.getElementById('basePower').value);
+            if (isNaN(basePower) || basePower <= 0) {
+                alert("正しい部隊素攻を入力してください。");
+                return;
+            }
+
+            const skillRows = document.querySelectorAll('.skill-row');
+            const skills = [];
+            skillRows.forEach(row => {
+                const rate = parseFloat(row.querySelector('.s-rate').value) / 100;
+                const effect = parseFloat(row.querySelector('.s-effect').value) / 100;
+                if (!isNaN(rate) && !isNaN(effect)) {
+                    skills.push({ rate, effect });
+                }
+            });
+
+            const iterations = 10000;
+            let maxDmg = 0;
+            let minDmg = Infinity;
+            let sumDmg = 0;
+
+            // 1万回の戦闘ループ
+            for (let i = 0; i < iterations; i++) {
+                let totalMultiplier = 1.0; // ベースは100% (1倍)
+                for (let skill of skills) {
+                    // 乱数でスキル発動判定
+                    if (Math.random() <= skill.rate) {
+                        totalMultiplier += skill.effect;
+                    }
+                }
+                const finalDmg = basePower * totalMultiplier;
+                
+                if (finalDmg > maxDmg) maxDmg = finalDmg;
+                if (finalDmg < minDmg) minDmg = finalDmg;
+                sumDmg += finalDmg;
+            }
+
+            // 結果の描画
+            document.getElementById('resMax').innerText = Math.floor(maxDmg).toLocaleString();
+            document.getElementById('resMin').innerText = Math.floor(minDmg).toLocaleString();
+            document.getElementById('resAvg').innerText = Math.floor(sumDmg / iterations).toLocaleString();
+            document.getElementById('resultArea').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
