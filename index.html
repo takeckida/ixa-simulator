@@ -5,7 +5,7 @@
     <title>戦国IXA 火力シミュレーター</title>
     <style>
         body { font-family: sans-serif; background-color: #f4f5f7; padding: 20px; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .container { max-width: 950px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         h1 { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px; background: #fafafa; }
         
@@ -14,10 +14,9 @@
         th { background-color: #eeeeee; font-size: 0.9em; }
         input[type="number"], input[type="text"], select { padding: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
-        .skill-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
         .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-calc { background-color: #ff9800; color: white; margin-bottom: 10px; }
-        .btn-add { background-color: #4caf50; color: white; }
+        .btn-add { background-color: #4caf50; color: white; margin-top: 10px;}
         .btn-delete { background-color: #f44336; color: white; padding: 6px 10px; }
         .btn-run { background-color: #1976d2; color: white; width: 100%; font-size: 1.2em; padding: 15px; margin-top: 10px; }
         .result-box { margin-top: 20px; padding: 20px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 5px; text-align: center; }
@@ -26,12 +25,15 @@
         
         .box-cmd { background: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #c8e6c9; }
         .box-mane { background: #fff3e0; padding: 15px; border-radius: 5px; border: 1px solid #ffe0b2; }
+        .skill-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px;}
+        .takuetsu-group { background: #fce4ec; padding: 5px 10px; border-radius: 4px; border: 1px dashed #f48fb1; display: inline-flex; align-items: center; gap: 8px;}
         h4 { margin-top: 0; margin-bottom: 10px; }
+        .header-sub { font-size: 0.8em; color: #666; margin-left: 10px; font-weight: normal;}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>戦国IXA 火力シミュレーター (Ver 0.3)</h1>
+        <h1>戦国IXA 火力シミュレーター (Ver 0.4 - 卓越対応版)</h1>
         
         <!-- 1. 素攻計算セクション -->
         <div class="section">
@@ -60,9 +62,7 @@
                     }
                 </script>
             </table>
-            
-            <button class="btn btn-calc" onclick="calculateBasePower()">🔄 入力値から素攻を計算</button>
-            <br>
+            <button class="btn btn-calc" onclick="calculateBasePower()">🔄 入力値から素攻を計算</button><br>
             <div class="total-power-row">
                 最終的な部隊素攻: <input type="number" id="basePower" value="1000000" style="width: 150px; font-size: 1.1em; font-weight:bold;">
             </div>
@@ -73,36 +73,46 @@
             <h3>2. 模倣（マネ）設定</h3>
             
             <div class="box-cmd">
-                <h4>👑 部隊長スキル（模倣元）</h4>
-                <input type="text" id="cmdName" value="天聖宝冠" style="width: 150px;">
-                <label>発動率: <input type="number" id="cmdRate" value="70" style="width: 60px;"> %</label>
-                <label>上昇率: <input type="number" id="cmdEffect" value="600" style="width: 80px;"> %</label>
-                <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">※部隊長自身が発動する際の確率と、模倣される効果値です。</p>
+                <h4>👑 部隊長スキル（模倣元）<span class="header-sub">※模倣されるスキル</span></h4>
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <input type="text" id="cmdName" value="建御雷神ノ閃光" style="width: 130px;">
+                    <label>発動: <input type="number" id="cmdRate" value="100" style="width: 60px;"> %</label>
+                    <label>上昇: <input type="number" id="cmdEffect" value="320" style="width: 70px;"> %</label>
+                    
+                    <div class="takuetsu-group">
+                        <label>卓越確率: <input type="number" id="cmdTakRate" value="50" style="width: 50px;"> %</label>
+                        <label>卓越時上昇: <input type="number" id="cmdTakEffect" value="640" style="width: 70px;"> %</label>
+                    </div>
+                </div>
             </div>
 
             <div class="box-mane">
-                <h4>👥 模倣スキルの数</h4>
+                <h4>👥 模倣スキルの数 <span class="header-sub">※部隊長スキルをコピーする回数</span></h4>
                 <label>マネ数: <input type="number" id="maneCount" value="12" style="width: 60px;"> 個</label>
                 <label>平均発動率: <input type="number" id="maneRate" value="100" style="width: 60px;"> %</label>
-                <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">※「遁世影武者」等の発動率。すべて100%発動なら100と入力してください。</p>
+                <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">※卓越確率は模倣先（部隊長スキル）の数値を参照し、マネごとに独立して卓越抽選が行われます。</p>
             </div>
         </div>
 
         <!-- 3. その他の通常スキルセクション -->
         <div class="section">
-            <h3>3. その他の通常スキル（初期スキル等）</h3>
+            <h3>3. その他の通常スキル（初期スキル・バフ等）</h3>
             <div id="skillsArea">
+                <!-- 初期スキル枠 -->
                 <div class="skill-row">
-                    <input type="text" value="建御雷神ノ閃光" class="s-name" style="width: 150px;">
-                    <label>発動率: <input type="number" value="100" class="s-rate" style="width: 60px;"> %</label>
-                    <label>上昇率: <input type="number" value="320" class="s-effect" style="width: 80px;"> %</label>
+                    <input type="text" value="通常スキル例" class="s-name" style="width: 130px;">
+                    <label>発動: <input type="number" value="100" class="s-rate" style="width: 50px;"> %</label>
+                    <label>上昇: <input type="number" value="150" class="s-effect" style="width: 60px;"> %</label>
+                    <div class="takuetsu-group">
+                        <label>卓越: <input type="number" value="0" class="s-tak-rate" style="width: 50px;"> %</label>
+                        <label>卓越上昇: <input type="number" value="0" class="s-tak-effect" style="width: 60px;"> %</label>
+                    </div>
                     <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
                 </div>
             </div>
             <button class="btn btn-add" onclick="addSkill()">+ スキルを追加</button>
         </div>
 
-        <!-- 実行ボタンと結果表示 -->
         <button class="btn btn-run" onclick="runSimulation()">⚔️ 10,000回 シミュレーション実行</button>
 
         <div id="resultArea" class="result-box" style="display:none;">
@@ -121,9 +131,7 @@
                 const troops = parseFloat(document.getElementById(`troops${i}`).value) || 0;
                 const soldierAtk = parseFloat(document.getElementById(`soldierAtk${i}`).value) || 0;
                 const command = parseFloat(document.getElementById(`command${i}`).value) || 1.0;
-
-                const bushouPower = (atk + (troops * soldierAtk)) * command;
-                totalBasePower += bushouPower;
+                totalBasePower += (atk + (troops * soldierAtk)) * command;
             }
             document.getElementById('basePower').value = Math.floor(totalBasePower);
         }
@@ -132,9 +140,13 @@
             const div = document.createElement('div');
             div.className = 'skill-row';
             div.innerHTML = `
-                <input type="text" value="新規スキル" class="s-name" style="width: 150px;">
-                <label>発動率: <input type="number" value="50" class="s-rate" style="width: 60px;"> %</label>
-                <label>上昇率: <input type="number" value="100" class="s-effect" style="width: 80px;"> %</label>
+                <input type="text" value="新規スキル" class="s-name" style="width: 130px;">
+                <label>発動: <input type="number" value="100" class="s-rate" style="width: 50px;"> %</label>
+                <label>上昇: <input type="number" value="100" class="s-effect" style="width: 60px;"> %</label>
+                <div class="takuetsu-group">
+                    <label>卓越: <input type="number" value="0" class="s-tak-rate" style="width: 50px;"> %</label>
+                    <label>卓越上昇: <input type="number" value="0" class="s-tak-effect" style="width: 60px;"> %</label>
+                </div>
                 <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
             `;
             document.getElementById('skillsArea').appendChild(div);
@@ -150,6 +162,8 @@
             // 部隊長スキルの取得
             const cmdRate = (parseFloat(document.getElementById('cmdRate').value) || 0) / 100;
             const cmdEffect = (parseFloat(document.getElementById('cmdEffect').value) || 0) / 100;
+            const cmdTakRate = (parseFloat(document.getElementById('cmdTakRate').value) || 0) / 100;
+            const cmdTakEffect = (parseFloat(document.getElementById('cmdTakEffect').value) || 0) / 100;
 
             // マネ設定の取得
             const maneCount = parseInt(document.getElementById('maneCount').value) || 0;
@@ -159,11 +173,11 @@
             const skillRows = document.querySelectorAll('.skill-row');
             const normalSkills = [];
             skillRows.forEach(row => {
-                const rate = parseFloat(row.querySelector('.s-rate').value) / 100;
-                const effect = parseFloat(row.querySelector('.s-effect').value) / 100;
-                if (!isNaN(rate) && !isNaN(effect)) {
-                    normalSkills.push({ rate, effect });
-                }
+                const rate = (parseFloat(row.querySelector('.s-rate').value) || 0) / 100;
+                const effect = (parseFloat(row.querySelector('.s-effect').value) || 0) / 100;
+                const takRate = (parseFloat(row.querySelector('.s-tak-rate').value) || 0) / 100;
+                const takEffect = (parseFloat(row.querySelector('.s-tak-effect').value) || 0) / 100;
+                normalSkills.push({ rate, effect, takRate, takEffect });
             });
 
             const iterations = 10000;
@@ -171,30 +185,36 @@
             let minDmg = Infinity;
             let sumDmg = 0;
 
-            // シミュレーションループ
+            // 卓越の処理関数
+            function getSkillEffect(isTriggered, effect, takRate, takEffect) {
+                if (!isTriggered) return 0;
+                // 発動した場合、卓越確率の判定を行う
+                if (takRate > 0 && Math.random() <= takRate) {
+                    return takEffect; // 卓越成功時は卓越効果値を使用
+                }
+                return effect; // 卓越失敗（または卓越なし）は通常効果値
+            }
+
             for (let i = 0; i < iterations; i++) {
-                let totalMultiplier = 1.0; // ベースは100% (1倍)
+                let totalMultiplier = 1.0; 
 
-                // 1. 部隊長スキル自体の発動判定
-                if (Math.random() <= cmdRate) {
-                    totalMultiplier += cmdEffect;
-                }
+                // 1. 部隊長スキル自体の発動と卓越
+                let cmdTriggered = Math.random() <= cmdRate;
+                totalMultiplier += getSkillEffect(cmdTriggered, cmdEffect, cmdTakRate, cmdTakEffect);
 
-                // 2. 模倣スキルの発動判定（マネ数分ループ）
+                // 2. 模倣スキルの発動と卓越（マネ数分ループ）
+                // ※マネごとに独立して卓越判定を行うのがIXAの仕様
                 for (let m = 0; m < maneCount; m++) {
-                    if (Math.random() <= maneRate) {
-                        totalMultiplier += cmdEffect;
-                    }
+                    let maneTriggered = Math.random() <= maneRate;
+                    totalMultiplier += getSkillEffect(maneTriggered, cmdEffect, cmdTakRate, cmdTakEffect);
                 }
 
-                // 3. その他の通常スキルの発動判定
+                // 3. その他の通常スキルの発動と卓越
                 for (let skill of normalSkills) {
-                    if (Math.random() <= skill.rate) {
-                        totalMultiplier += skill.effect;
-                    }
+                    let skillTriggered = Math.random() <= skill.rate;
+                    totalMultiplier += getSkillEffect(skillTriggered, skill.effect, skill.takRate, skill.takEffect);
                 }
 
-                // 最終火力の計算
                 const finalDmg = basePower * totalMultiplier;
                 
                 if (finalDmg > maxDmg) maxDmg = finalDmg;
