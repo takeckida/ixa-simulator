@@ -8,7 +8,9 @@
         .container { max-width: 950px; margin: 0 auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .header-area { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
         h1 { font-size: 1.5em; margin: 0; }
-        .save-load-btns { display: flex; gap: 10px; }
+        
+        .save-load-area { background: #e0f7fa; padding: 15px; border-radius: 5px; border: 1px solid #b2ebf2; margin-bottom: 25px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .save-load-area select { padding: 8px; font-size: 1em; min-width: 200px; }
         
         .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px; background: #fafafa; }
         
@@ -17,13 +19,14 @@
         th { background-color: #eeeeee; font-size: 0.9em; }
         input[type="number"], input[type="text"], select { padding: 6px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
         
-        .btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .btn-calc { background-color: #ff9800; color: white; margin-bottom: 10px; }
         .btn-add { background-color: #4caf50; color: white; margin-top: 10px;}
         .btn-delete { background-color: #f44336; color: white; padding: 6px 10px; }
         .btn-run { background-color: #1976d2; color: white; width: 100%; font-size: 1.2em; padding: 15px; margin-top: 10px; }
         .btn-save { background-color: #607d8b; color: white; }
         .btn-load { background-color: #8d6e63; color: white; }
+        .btn-del-data { background-color: #e57373; color: white; }
         
         .result-box { margin-top: 20px; padding: 20px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 5px; text-align: center; }
         .result-value { font-size: 1.5em; font-weight: bold; color: #d32f2f; }
@@ -39,13 +42,25 @@
         .header-sub { font-size: 0.8em; color: #666; margin-left: 10px; font-weight: normal;}
     </style>
 </head>
-<body>
+<body onload="initApp()">
     <div class="container">
         <div class="header-area">
-            <h1>戦国IXA 火力シミュレーター (Ver 0.6)</h1>
-            <div class="save-load-btns">
-                <button class="btn btn-save" onclick="saveData()">💾 保存</button>
+            <h1>戦国IXA 火力シミュレーター (Ver 0.7)</h1>
+        </div>
+
+        <!-- データ管理エリア -->
+        <div class="save-load-area">
+            <div>
+                <input type="text" id="saveName" placeholder="部隊名 (例: 今川マネ部隊)" style="width: 200px; padding: 8px;">
+                <button class="btn btn-save" onclick="saveData()">💾 名前を付けて保存</button>
+            </div>
+            <div style="border-left: 2px solid #b2ebf2; height: 30px; margin: 0 10px;"></div>
+            <div>
+                <select id="savedList">
+                    <option value="">-- 保存された部隊を選ぶ --</option>
+                </select>
                 <button class="btn btn-load" onclick="loadData()">📂 読込</button>
+                <button class="btn btn-del-data" onclick="deleteData()">🗑 削除</button>
             </div>
         </div>
         
@@ -142,9 +157,41 @@
     </div>
 
     <script>
-        // --- データ保存・読み込み処理 ---
+        // --- データ管理（複数保存）処理 ---
+        const STORAGE_KEY = 'ixaSimulatorDataList';
+
+        function initApp() {
+            updateSavedList();
+        }
+
+        // 保存されているデータ一覧（オブジェクト）を取得
+        function getSavedDataObj() {
+            const rawData = localStorage.getItem(STORAGE_KEY);
+            return rawData ? JSON.parse(rawData) : {};
+        }
+
+        // セレクトボックスのリストを更新
+        function updateSavedList() {
+            const dataObj = getSavedDataObj();
+            const select = document.getElementById('savedList');
+            select.innerHTML = '<option value="">-- 保存された部隊を選ぶ --</option>';
+            
+            for (const name in dataObj) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            }
+        }
+
         function saveData() {
-            const data = {
+            const name = document.getElementById('saveName').value.trim();
+            if (!name) {
+                alert('保存する部隊名を入力してください。');
+                return;
+            }
+
+            const currentData = {
                 bushou: [],
                 basePower: document.getElementById('basePower').value,
                 globalTakBuff: document.getElementById('globalTakBuff').value,
@@ -163,7 +210,7 @@
             };
 
             for(let i=1; i<=4; i++) {
-                data.bushou.push({
+                currentData.bushou.push({
                     atk: document.getElementById(`atk${i}`).value,
                     troops: document.getElementById(`troops${i}`).value,
                     soldierAtk: document.getElementById(`soldierAtk${i}`).value,
@@ -172,7 +219,7 @@
             }
 
             document.querySelectorAll('.skill-row').forEach(row => {
-                data.skills.push({
+                currentData.skills.push({
                     name: row.querySelector('.s-name').value,
                     rate: row.querySelector('.s-rate').value,
                     effect: row.querySelector('.s-effect').value,
@@ -181,19 +228,33 @@
                 });
             });
 
-            localStorage.setItem('ixaSimulatorData', JSON.stringify(data));
-            alert('データをブラウザに保存しました！');
+            const dataObj = getSavedDataObj();
+            dataObj[name] = currentData;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(dataObj));
+            
+            updateSavedList();
+            document.getElementById('savedList').value = name; // 保存したものを選択状態に
+            alert(`「${name}」を保存しました！`);
         }
 
         function loadData() {
-            const savedData = localStorage.getItem('ixaSimulatorData');
-            if(!savedData) {
-                alert('保存されたデータがありません。');
+            const selectName = document.getElementById('savedList').value;
+            if (!selectName) {
+                alert('読み込む部隊を選んでください。');
                 return;
             }
 
-            const data = JSON.parse(savedData);
+            const dataObj = getSavedDataObj();
+            const data = dataObj[selectName];
             
+            if(!data) {
+                alert('データが見つかりません。');
+                return;
+            }
+            
+            // 画面にデータを反映
+            document.getElementById('saveName').value = selectName; // 名前も復元
+
             if(data.bushou) {
                 for(let i=1; i<=4; i++) {
                     if(data.bushou[i-1]) {
@@ -223,7 +284,7 @@
 
             if(data.skills) {
                 const skillsArea = document.getElementById('skillsArea');
-                skillsArea.innerHTML = ''; // 一旦クリア
+                skillsArea.innerHTML = ''; 
                 data.skills.forEach(skill => {
                     const div = document.createElement('div');
                     div.className = 'skill-row';
@@ -240,7 +301,23 @@
                     skillsArea.appendChild(div);
                 });
             }
-            alert('データを読み込みました！');
+            // 読み込み直後に素攻の再計算は行わず、保存されていた最終素攻をそのまま表示します。
+        }
+
+        function deleteData() {
+            const selectName = document.getElementById('savedList').value;
+            if (!selectName) {
+                alert('削除する部隊を選んでください。');
+                return;
+            }
+
+            if(confirm(`本当に「${selectName}」を削除しますか？`)) {
+                const dataObj = getSavedDataObj();
+                delete dataObj[selectName];
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataObj));
+                updateSavedList();
+                document.getElementById('saveName').value = '';
+            }
         }
 
         // --- 以下は既存の計算・シミュレーション処理 ---
