@@ -35,9 +35,12 @@
         .box-cmd { background: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #c8e6c9; }
         .box-mane { background: #fff3e0; padding: 15px; border-radius: 5px; border: 1px solid #ffe0b2; }
         .box-buff { background: #fce4ec; padding: 15px; border-radius: 5px; border: 1px solid #f8bbd0; margin-bottom: 15px;}
+        .box-battle-cond { background: #fff8e1; padding: 15px; border-radius: 5px; border: 1px solid #ffecb3; margin-bottom: 15px;}
         
         .skill-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; background: #fff; padding: 10px; border: 1px solid #ddd; border-radius: 4px;}
         .takuetsu-group { background: #fce4ec; padding: 5px 10px; border-radius: 4px; border: 1px dashed #f48fb1; display: inline-flex; align-items: center; gap: 8px;}
+        .condition-group { background: #e3f2fd; padding: 5px 10px; border-radius: 4px; border: 1px dashed #90caf9; display: inline-flex; align-items: center; gap: 8px;}
+        
         h4 { margin-top: 0; margin-bottom: 10px; }
         .header-sub { font-size: 0.8em; color: #666; margin-left: 10px; font-weight: normal;}
     </style>
@@ -45,13 +48,13 @@
 <body onload="initApp()">
     <div class="container">
         <div class="header-area">
-            <h1>戦国IXA 火力シミュレーター (Ver 0.7)</h1>
+            <h1>戦国IXA 火力シミュレーター (Ver 0.8)</h1>
         </div>
 
         <!-- データ管理エリア -->
         <div class="save-load-area">
             <div>
-                <input type="text" id="saveName" placeholder="部隊名 (例: 今川マネ部隊)" style="width: 200px; padding: 8px;">
+                <input type="text" id="saveName" placeholder="部隊名 (例: 盟主戦マネ部隊)" style="width: 200px; padding: 8px;">
                 <button class="btn btn-save" onclick="saveData()">💾 名前を付けて保存</button>
             </div>
             <div style="border-left: 2px solid #b2ebf2; height: 30px; margin: 0 10px;"></div>
@@ -97,10 +100,18 @@
             </div>
         </div>
 
-        <!-- 2. 部隊バフ設定 -->
+        <!-- 2. バフ・戦闘条件設定 -->
         <div class="section box-buff">
-            <h3>2. 部隊全体のバフ設定</h3>
-            <label style="font-weight: bold;">✨ 卓越確率アップの合計値: + <input type="number" id="globalTakBuff" value="15" style="width: 80px;"> %</label>
+            <h3>2. 部隊バフ ＆ 戦闘条件設定</h3>
+            <label style="font-weight: bold;">✨ 卓越確率アップの合計値: + <input type="number" id="globalTakBuff" value="0" style="width: 60px;"> %</label>
+            
+            <div class="box-battle-cond" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 5px;">⚔️ 依存スキル用の戦闘条件</h4>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <label>敵軍の武将数: <input type="number" id="condEnemyCount" value="160" style="width: 60px;"> 人</label>
+                    <label>自部隊の総コスト: <input type="number" id="condSelfCost" value="22.5" step="0.5" style="width: 60px;"></label>
+                </div>
+            </div>
         </div>
 
         <!-- 3. 模倣（マネ）セクション -->
@@ -110,15 +121,25 @@
             <div class="box-cmd">
                 <h4>👑 部隊長スキル（模倣元）</h4>
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <input type="text" id="cmdName" value="遠呂智ノ閃光" style="width: 130px;">
-                    <label>発動: <input type="number" id="cmdRate" value="100" style="width: 60px;"> %</label>
-                    <label>上昇: <input type="number" id="cmdEffect" value="120" style="width: 70px;"> %</label>
+                    <input type="text" id="cmdName" value="天聖宝冠" style="width: 130px;">
+                    <label>発動: <input type="number" id="cmdRate" value="100" style="width: 50px;"> %</label>
+                    <label>ベース上昇: <input type="number" id="cmdEffect" value="0" style="width: 60px;"> %</label>
                     
                     <div class="takuetsu-group">
-                        <label>卓越確率: <input type="number" id="cmdTakRate" value="30" style="width: 50px;"> %</label>
-                        <label>卓越時上昇: <input type="number" id="cmdTakEffect" value="360" style="width: 70px;"> %</label>
+                        <label>卓越確率: <input type="number" id="cmdTakRate" value="0" style="width: 50px;"> %</label>
+                        <label>卓越上昇: <input type="number" id="cmdTakEffect" value="0" style="width: 60px;"> %</label>
+                    </div>
+
+                    <div class="condition-group">
+                        <select id="cmdCondType">
+                            <option value="none">依存なし</option>
+                            <option value="enemyCount" selected>敵武将数</option>
+                            <option value="selfCost">自コスト</option>
+                        </select>
+                        <label>× <input type="number" id="cmdCondCoef" value="4" style="width: 50px;"> % を加算</label>
                     </div>
                 </div>
+                <p style="font-size: 0.8em; color: #555; margin: 5px 0 0 0;">※例: 「敵軍武将数×4%を攻撃効果に加算」の場合は、ベース0%、依存先を「敵武将数」、係数を「4」に設定します。</p>
             </div>
 
             <div class="box-mane">
@@ -133,12 +154,20 @@
             <h3>4. その他の通常スキル（初期スキル・バフ等）</h3>
             <div id="skillsArea">
                 <div class="skill-row">
-                    <input type="text" value="建御雷神ノ閃光" class="s-name" style="width: 130px;">
+                    <input type="text" value="加算スキル例" class="s-name" style="width: 110px;">
                     <label>発動: <input type="number" value="100" class="s-rate" style="width: 50px;"> %</label>
-                    <label>上昇: <input type="number" value="320" class="s-effect" style="width: 60px;"> %</label>
+                    <label>上昇: <input type="number" value="0" class="s-effect" style="width: 60px;"> %</label>
                     <div class="takuetsu-group">
-                        <label>卓越: <input type="number" value="0" class="s-tak-rate" style="width: 50px;"> %</label>
-                        <label>卓越上昇: <input type="number" value="0" class="s-tak-effect" style="width: 60px;"> %</label>
+                        <label>卓越: <input type="number" value="0" class="s-tak-rate" style="width: 40px;">%</label>
+                        <label>卓越上昇: <input type="number" value="0" class="s-tak-effect" style="width: 60px;">%</label>
+                    </div>
+                    <div class="condition-group">
+                        <select class="s-cond-type">
+                            <option value="none">依存なし</option>
+                            <option value="enemyCount">敵武将数</option>
+                            <option value="selfCost" selected>自コスト</option>
+                        </select>
+                        <label>× <input type="number" value="15" class="s-cond-coef" style="width: 50px;"> %</label>
                     </div>
                     <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
                 </div>
@@ -157,25 +186,22 @@
     </div>
 
     <script>
-        // --- データ管理（複数保存）処理 ---
+        // --- データ管理処理 ---
         const STORAGE_KEY = 'ixaSimulatorDataList';
 
         function initApp() {
             updateSavedList();
         }
 
-        // 保存されているデータ一覧（オブジェクト）を取得
         function getSavedDataObj() {
             const rawData = localStorage.getItem(STORAGE_KEY);
             return rawData ? JSON.parse(rawData) : {};
         }
 
-        // セレクトボックスのリストを更新
         function updateSavedList() {
             const dataObj = getSavedDataObj();
             const select = document.getElementById('savedList');
             select.innerHTML = '<option value="">-- 保存された部隊を選ぶ --</option>';
-            
             for (const name in dataObj) {
                 const option = document.createElement('option');
                 option.value = name;
@@ -195,12 +221,18 @@
                 bushou: [],
                 basePower: document.getElementById('basePower').value,
                 globalTakBuff: document.getElementById('globalTakBuff').value,
+                battleCond: {
+                    enemyCount: document.getElementById('condEnemyCount').value,
+                    selfCost: document.getElementById('condSelfCost').value
+                },
                 cmd: {
                     name: document.getElementById('cmdName').value,
                     rate: document.getElementById('cmdRate').value,
                     effect: document.getElementById('cmdEffect').value,
                     takRate: document.getElementById('cmdTakRate').value,
-                    takEffect: document.getElementById('cmdTakEffect').value
+                    takEffect: document.getElementById('cmdTakEffect').value,
+                    condType: document.getElementById('cmdCondType').value,
+                    condCoef: document.getElementById('cmdCondCoef').value
                 },
                 mane: {
                     count: document.getElementById('maneCount').value,
@@ -224,7 +256,9 @@
                     rate: row.querySelector('.s-rate').value,
                     effect: row.querySelector('.s-effect').value,
                     takRate: row.querySelector('.s-tak-rate').value,
-                    takEffect: row.querySelector('.s-tak-effect').value
+                    takEffect: row.querySelector('.s-tak-effect').value,
+                    condType: row.querySelector('.s-cond-type').value,
+                    condCoef: row.querySelector('.s-cond-coef').value
                 });
             });
 
@@ -233,27 +267,19 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(dataObj));
             
             updateSavedList();
-            document.getElementById('savedList').value = name; // 保存したものを選択状態に
+            document.getElementById('savedList').value = name;
             alert(`「${name}」を保存しました！`);
         }
 
         function loadData() {
             const selectName = document.getElementById('savedList').value;
-            if (!selectName) {
-                alert('読み込む部隊を選んでください。');
-                return;
-            }
+            if (!selectName) return;
 
             const dataObj = getSavedDataObj();
             const data = dataObj[selectName];
+            if(!data) return;
             
-            if(!data) {
-                alert('データが見つかりません。');
-                return;
-            }
-            
-            // 画面にデータを反映
-            document.getElementById('saveName').value = selectName; // 名前も復元
+            document.getElementById('saveName').value = selectName;
 
             if(data.bushou) {
                 for(let i=1; i<=4; i++) {
@@ -269,12 +295,19 @@
             if(data.basePower) document.getElementById('basePower').value = data.basePower;
             if(data.globalTakBuff) document.getElementById('globalTakBuff').value = data.globalTakBuff;
             
+            if(data.battleCond) {
+                document.getElementById('condEnemyCount').value = data.battleCond.enemyCount;
+                document.getElementById('condSelfCost').value = data.battleCond.selfCost;
+            }
+
             if(data.cmd) {
                 document.getElementById('cmdName').value = data.cmd.name;
                 document.getElementById('cmdRate').value = data.cmd.rate;
                 document.getElementById('cmdEffect').value = data.cmd.effect;
                 document.getElementById('cmdTakRate').value = data.cmd.takRate;
                 document.getElementById('cmdTakEffect').value = data.cmd.takEffect;
+                if(data.cmd.condType) document.getElementById('cmdCondType').value = data.cmd.condType;
+                if(data.cmd.condCoef) document.getElementById('cmdCondCoef').value = data.cmd.condCoef;
             }
 
             if(data.mane) {
@@ -289,27 +322,31 @@
                     const div = document.createElement('div');
                     div.className = 'skill-row';
                     div.innerHTML = `
-                        <input type="text" value="${skill.name}" class="s-name" style="width: 130px;">
+                        <input type="text" value="${skill.name}" class="s-name" style="width: 110px;">
                         <label>発動: <input type="number" value="${skill.rate}" class="s-rate" style="width: 50px;"> %</label>
                         <label>上昇: <input type="number" value="${skill.effect}" class="s-effect" style="width: 60px;"> %</label>
                         <div class="takuetsu-group">
-                            <label>卓越: <input type="number" value="${skill.takRate}" class="s-tak-rate" style="width: 50px;"> %</label>
-                            <label>卓越上昇: <input type="number" value="${skill.takEffect}" class="s-tak-effect" style="width: 60px;"> %</label>
+                            <label>卓越: <input type="number" value="${skill.takRate}" class="s-tak-rate" style="width: 40px;">%</label>
+                            <label>卓越上昇: <input type="number" value="${skill.takEffect}" class="s-tak-effect" style="width: 60px;">%</label>
+                        </div>
+                        <div class="condition-group">
+                            <select class="s-cond-type">
+                                <option value="none" ${skill.condType==='none'?'selected':''}>依存なし</option>
+                                <option value="enemyCount" ${skill.condType==='enemyCount'?'selected':''}>敵武将数</option>
+                                <option value="selfCost" ${skill.condType==='selfCost'?'selected':''}>自コスト</option>
+                            </select>
+                            <label>× <input type="number" value="${skill.condCoef || 0}" class="s-cond-coef" style="width: 50px;"> %</label>
                         </div>
                         <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
                     `;
                     skillsArea.appendChild(div);
                 });
             }
-            // 読み込み直後に素攻の再計算は行わず、保存されていた最終素攻をそのまま表示します。
         }
 
         function deleteData() {
             const selectName = document.getElementById('savedList').value;
-            if (!selectName) {
-                alert('削除する部隊を選んでください。');
-                return;
-            }
+            if (!selectName) return;
 
             if(confirm(`本当に「${selectName}」を削除しますか？`)) {
                 const dataObj = getSavedDataObj();
@@ -320,7 +357,7 @@
             }
         }
 
-        // --- 以下は既存の計算・シミュレーション処理 ---
+        // --- 計算・シミュレーション処理 ---
         function calculateBasePower() {
             let totalBasePower = 0;
             for (let i = 1; i <= 4; i++) {
@@ -337,16 +374,31 @@
             const div = document.createElement('div');
             div.className = 'skill-row';
             div.innerHTML = `
-                <input type="text" value="新規スキル" class="s-name" style="width: 130px;">
+                <input type="text" value="新規スキル" class="s-name" style="width: 110px;">
                 <label>発動: <input type="number" value="100" class="s-rate" style="width: 50px;"> %</label>
                 <label>上昇: <input type="number" value="100" class="s-effect" style="width: 60px;"> %</label>
                 <div class="takuetsu-group">
-                    <label>卓越: <input type="number" value="0" class="s-tak-rate" style="width: 50px;"> %</label>
-                    <label>卓越上昇: <input type="number" value="0" class="s-tak-effect" style="width: 60px;"> %</label>
+                    <label>卓越: <input type="number" value="0" class="s-tak-rate" style="width: 40px;">%</label>
+                    <label>卓越上昇: <input type="number" value="0" class="s-tak-effect" style="width: 60px;">%</label>
+                </div>
+                <div class="condition-group">
+                    <select class="s-cond-type">
+                        <option value="none">依存なし</option>
+                        <option value="enemyCount">敵武将数</option>
+                        <option value="selfCost">自コスト</option>
+                    </select>
+                    <label>× <input type="number" value="0" class="s-cond-coef" style="width: 50px;"> %</label>
                 </div>
                 <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
             `;
             document.getElementById('skillsArea').appendChild(div);
+        }
+
+        // 条件に合わせた倍率を計算する補助関数
+        function getCondBonus(type, coef, enemyCount, selfCost) {
+            if (type === 'enemyCount') return enemyCount * coef;
+            if (type === 'selfCost') return selfCost * coef;
+            return 0;
         }
 
         function runSimulation() {
@@ -357,20 +409,39 @@
             }
 
             const globalTakBuff = (parseFloat(document.getElementById('globalTakBuff').value) || 0) / 100;
+            const enemyCount = parseFloat(document.getElementById('condEnemyCount').value) || 0;
+            const selfCost = parseFloat(document.getElementById('condSelfCost').value) || 0;
+
+            // 部隊長スキルの実質効果値を計算 (ベース + 条件加算分)
             const cmdRate = (parseFloat(document.getElementById('cmdRate').value) || 0) / 100;
-            const cmdEffect = (parseFloat(document.getElementById('cmdEffect').value) || 0) / 100;
+            const cmdCondType = document.getElementById('cmdCondType').value;
+            const cmdCondCoef = (parseFloat(document.getElementById('cmdCondCoef').value) || 0) / 100;
+            const cmdCondBonus = getCondBonus(cmdCondType, cmdCondCoef, enemyCount, selfCost);
+
+            const cmdEffect = ((parseFloat(document.getElementById('cmdEffect').value) || 0) / 100) + cmdCondBonus;
             const cmdTakRate = (parseFloat(document.getElementById('cmdTakRate').value) || 0) / 100;
-            const cmdTakEffect = (parseFloat(document.getElementById('cmdTakEffect').value) || 0) / 100;
+            
+            // 卓越時のベース値があるか、卓越確率が設定されていれば、卓越時効果にも条件ボーナスを乗せる
+            let rawCmdTakEffect = (parseFloat(document.getElementById('cmdTakEffect').value) || 0) / 100;
+            const cmdTakEffect = (cmdTakRate > 0 || rawCmdTakEffect > 0) ? rawCmdTakEffect + cmdCondBonus : 0;
+
             const maneCount = parseInt(document.getElementById('maneCount').value) || 0;
             const maneRate = (parseFloat(document.getElementById('maneRate').value) || 0) / 100;
 
+            // 通常スキルの実質効果値を前計算
             const skillRows = document.querySelectorAll('.skill-row');
             const normalSkills = [];
             skillRows.forEach(row => {
                 const rate = (parseFloat(row.querySelector('.s-rate').value) || 0) / 100;
-                const effect = (parseFloat(row.querySelector('.s-effect').value) || 0) / 100;
+                const condType = row.querySelector('.s-cond-type').value;
+                const condCoef = (parseFloat(row.querySelector('.s-cond-coef').value) || 0) / 100;
+                const condBonus = getCondBonus(condType, condCoef, enemyCount, selfCost);
+                
+                const effect = ((parseFloat(row.querySelector('.s-effect').value) || 0) / 100) + condBonus;
                 const takRate = (parseFloat(row.querySelector('.s-tak-rate').value) || 0) / 100;
-                const takEffect = (parseFloat(row.querySelector('.s-tak-effect').value) || 0) / 100;
+                let rawTakEffect = (parseFloat(row.querySelector('.s-tak-effect').value) || 0) / 100;
+                const takEffect = (takRate > 0 || rawTakEffect > 0) ? rawTakEffect + condBonus : 0;
+
                 normalSkills.push({ rate, effect, takRate, takEffect });
             });
 
@@ -392,14 +463,18 @@
 
             for (let i = 0; i < iterations; i++) {
                 let totalMultiplier = 1.0; 
+                
+                // 部隊長スキルの発動
                 let cmdTriggered = Math.random() <= cmdRate;
                 totalMultiplier += getSkillEffect(cmdTriggered, cmdEffect, cmdTakRate, cmdTakEffect, globalTakBuff);
 
+                // マネの処理（IXAの仕様通り、計算済みの部隊長スキルの効果値をコピーする）
                 for (let m = 0; m < maneCount; m++) {
                     let maneTriggered = Math.random() <= maneRate;
                     totalMultiplier += getSkillEffect(maneTriggered, cmdEffect, cmdTakRate, cmdTakEffect, globalTakBuff);
                 }
 
+                // 通常スキルの処理
                 for (let skill of normalSkills) {
                     let skillTriggered = Math.random() <= skill.rate;
                     totalMultiplier += getSkillEffect(skillTriggered, skill.effect, skill.takRate, skill.takEffect, globalTakBuff);
