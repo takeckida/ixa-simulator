@@ -9,7 +9,6 @@
         h1 { font-size: 1.5em; border-bottom: 2px solid #333; padding-bottom: 10px; }
         .section { margin-bottom: 25px; padding: 15px; border: 1px solid #e0e0e0; border-radius: 5px; background: #fafafa; }
         
-        /* テーブルのスタイル */
         table { width: 100%; border-collapse: collapse; margin-bottom: 15px; background: #fff; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
         th { background-color: #eeeeee; font-size: 0.9em; }
@@ -24,23 +23,23 @@
         .result-box { margin-top: 20px; padding: 20px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 5px; text-align: center; }
         .result-value { font-size: 1.5em; font-weight: bold; color: #d32f2f; }
         .total-power-row { font-size: 1.2em; font-weight: bold; background: #e3f2fd; padding: 10px; border-radius: 5px; display: inline-block;}
+        
+        .box-cmd { background: #e8f5e9; padding: 15px; border-radius: 5px; margin-bottom: 10px; border: 1px solid #c8e6c9; }
+        .box-mane { background: #fff3e0; padding: 15px; border-radius: 5px; border: 1px solid #ffe0b2; }
+        h4 { margin-top: 0; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>戦国IXA 火力シミュレーター (Ver 0.2)</h1>
+        <h1>戦国IXA 火力シミュレーター (Ver 0.3)</h1>
         
+        <!-- 1. 素攻計算セクション -->
         <div class="section">
             <h3>1. 部隊素攻の計算</h3>
             <table>
                 <tr>
-                    <th></th>
-                    <th>武将攻撃力</th>
-                    <th>兵数</th>
-                    <th>兵士攻撃力</th>
-                    <th>統率</th>
+                    <th></th><th>武将攻撃力</th><th>兵数</th><th>兵士攻撃力</th><th>統率</th>
                 </tr>
-                <!-- 武将1~4の入力行を生成 -->
                 <script>
                     const ranks = [
                         {name: 'XXX', val: 1.3}, {name: 'XX', val: 1.25}, {name: 'X', val: 1.2},
@@ -48,7 +47,6 @@
                         {name: 'A', val: 1.0}, {name: 'B', val: 0.95}, {name: 'C', val: 0.9}
                     ];
                     let optionsHTML = ranks.map(r => `<option value="${r.val}">${r.name} (${r.val})</option>`).join('');
-
                     for(let i=1; i<=4; i++) {
                         document.write(`
                             <tr>
@@ -68,23 +66,43 @@
             <div class="total-power-row">
                 最終的な部隊素攻: <input type="number" id="basePower" value="1000000" style="width: 150px; font-size: 1.1em; font-weight:bold;">
             </div>
-            <p style="font-size: 0.85em; color: #666;">※手動で直接入力することも可能です。</p>
         </div>
 
+        <!-- 2. 模倣（マネ）セクション -->
         <div class="section">
-            <h3>2. スキルセット</h3>
+            <h3>2. 模倣（マネ）設定</h3>
+            
+            <div class="box-cmd">
+                <h4>👑 部隊長スキル（模倣元）</h4>
+                <input type="text" id="cmdName" value="天聖宝冠" style="width: 150px;">
+                <label>発動率: <input type="number" id="cmdRate" value="70" style="width: 60px;"> %</label>
+                <label>上昇率: <input type="number" id="cmdEffect" value="600" style="width: 80px;"> %</label>
+                <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">※部隊長自身が発動する際の確率と、模倣される効果値です。</p>
+            </div>
+
+            <div class="box-mane">
+                <h4>👥 模倣スキルの数</h4>
+                <label>マネ数: <input type="number" id="maneCount" value="12" style="width: 60px;"> 個</label>
+                <label>平均発動率: <input type="number" id="maneRate" value="100" style="width: 60px;"> %</label>
+                <p style="font-size: 0.85em; color: #555; margin: 5px 0 0 0;">※「遁世影武者」等の発動率。すべて100%発動なら100と入力してください。</p>
+            </div>
+        </div>
+
+        <!-- 3. その他の通常スキルセクション -->
+        <div class="section">
+            <h3>3. その他の通常スキル（初期スキル等）</h3>
             <div id="skillsArea">
-                <!-- 初期スキル枠 -->
                 <div class="skill-row">
-                    <input type="text" value="火之迦具土神" class="s-name" style="width: 180px;">
+                    <input type="text" value="建御雷神ノ閃光" class="s-name" style="width: 150px;">
                     <label>発動率: <input type="number" value="100" class="s-rate" style="width: 60px;"> %</label>
-                    <label>上昇率: <input type="number" value="160" class="s-effect" style="width: 80px;"> %</label>
+                    <label>上昇率: <input type="number" value="320" class="s-effect" style="width: 80px;"> %</label>
                     <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
                 </div>
             </div>
             <button class="btn btn-add" onclick="addSkill()">+ スキルを追加</button>
         </div>
 
+        <!-- 実行ボタンと結果表示 -->
         <button class="btn btn-run" onclick="runSimulation()">⚔️ 10,000回 シミュレーション実行</button>
 
         <div id="resultArea" class="result-box" style="display:none;">
@@ -96,7 +114,6 @@
     </div>
 
     <script>
-        // 素攻を計算する関数
         function calculateBasePower() {
             let totalBasePower = 0;
             for (let i = 1; i <= 4; i++) {
@@ -105,11 +122,9 @@
                 const soldierAtk = parseFloat(document.getElementById(`soldierAtk${i}`).value) || 0;
                 const command = parseFloat(document.getElementById(`command${i}`).value) || 1.0;
 
-                // IXAの計算式: (武将攻撃力 + (兵数 * 兵士攻撃力)) * 統率補正
                 const bushouPower = (atk + (troops * soldierAtk)) * command;
                 totalBasePower += bushouPower;
             }
-            // 計算結果を素攻入力欄にセット
             document.getElementById('basePower').value = Math.floor(totalBasePower);
         }
 
@@ -117,7 +132,7 @@
             const div = document.createElement('div');
             div.className = 'skill-row';
             div.innerHTML = `
-                <input type="text" value="新規スキル" class="s-name" style="width: 180px;">
+                <input type="text" value="新規スキル" class="s-name" style="width: 150px;">
                 <label>発動率: <input type="number" value="50" class="s-rate" style="width: 60px;"> %</label>
                 <label>上昇率: <input type="number" value="100" class="s-effect" style="width: 80px;"> %</label>
                 <button class="btn btn-delete" onclick="this.parentElement.remove()">削除</button>
@@ -132,13 +147,22 @@
                 return;
             }
 
+            // 部隊長スキルの取得
+            const cmdRate = (parseFloat(document.getElementById('cmdRate').value) || 0) / 100;
+            const cmdEffect = (parseFloat(document.getElementById('cmdEffect').value) || 0) / 100;
+
+            // マネ設定の取得
+            const maneCount = parseInt(document.getElementById('maneCount').value) || 0;
+            const maneRate = (parseFloat(document.getElementById('maneRate').value) || 0) / 100;
+
+            // その他のスキル取得
             const skillRows = document.querySelectorAll('.skill-row');
-            const skills = [];
+            const normalSkills = [];
             skillRows.forEach(row => {
                 const rate = parseFloat(row.querySelector('.s-rate').value) / 100;
                 const effect = parseFloat(row.querySelector('.s-effect').value) / 100;
                 if (!isNaN(rate) && !isNaN(effect)) {
-                    skills.push({ rate, effect });
+                    normalSkills.push({ rate, effect });
                 }
             });
 
@@ -147,13 +171,30 @@
             let minDmg = Infinity;
             let sumDmg = 0;
 
+            // シミュレーションループ
             for (let i = 0; i < iterations; i++) {
-                let totalMultiplier = 1.0;
-                for (let skill of skills) {
+                let totalMultiplier = 1.0; // ベースは100% (1倍)
+
+                // 1. 部隊長スキル自体の発動判定
+                if (Math.random() <= cmdRate) {
+                    totalMultiplier += cmdEffect;
+                }
+
+                // 2. 模倣スキルの発動判定（マネ数分ループ）
+                for (let m = 0; m < maneCount; m++) {
+                    if (Math.random() <= maneRate) {
+                        totalMultiplier += cmdEffect;
+                    }
+                }
+
+                // 3. その他の通常スキルの発動判定
+                for (let skill of normalSkills) {
                     if (Math.random() <= skill.rate) {
                         totalMultiplier += skill.effect;
                     }
                 }
+
+                // 最終火力の計算
                 const finalDmg = basePower * totalMultiplier;
                 
                 if (finalDmg > maxDmg) maxDmg = finalDmg;
